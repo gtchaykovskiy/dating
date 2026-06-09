@@ -118,11 +118,11 @@
     <h1 id="doneTitle">Свидание подтверждено!</h1>
     <p id="summary"></p>
     <div class="final-btns">
-      <button class="btn tg" id="tgBtn" onclick="sendTG()">📨 Написать Георгию</button>
       <button class="btn cal" onclick="addCal()">📅 Добавить в календарь</button>
     </div>
-    <small id="footnote">Жду тебя 💛 - Георгий</small>
+    <small id="footnote">Жду тебя 💛 — Георгий</small>
   </div>
+
 </div>
 
 <script>
@@ -132,7 +132,7 @@ const SHOW_TG = true;
 /* ========================== */
 
 const BOT_TOKEN = "8986043015:AAH8-jw8QYqbblo6BGw12Zld6FnIKW4UBuQ";
-const CHAT_ID   = "c_georgiy";
+const CHAT_ID   = "853789332";
 
 let cur=0; const total=6; const ans={};
 function setProg(){document.getElementById('prog').style.width=(cur/total*100)+'%';}
@@ -185,11 +185,15 @@ function run(e){
 function yay(){
   show(6); confetti();
   const e=ans['_e']||'☕';
-  document.getElementById('doneTitle').innerText=ans['Имя']+', все решено! '+e;
+  document.getElementById('doneTitle').innerText=ans['Имя']+', всё решено! '+e;
   document.getElementById('summary').innerText=
     'Вот что мы решили:\n\nНапиток: '+ans['Напиток']+'\nДесерт: '+ans['Десерт']+
     '\nВайб: '+ans['Вайб']+'\nКогда: '+ans['День']+', '+ans['Время'];
-  applyMode();
+  // автоматически отправляем ответы тебе в телеграм
+  const msg='🎉 '+ans['Имя']+' согласилась '+e+'\n\n• Напиток: '+ans['Напиток']+
+    '\n• Десерт: '+ans['Десерт']+'\n• Вайб: '+ans['Вайб']+'\n• Когда: '+ans['День']+', '+ans['Время'];
+  fetch('https://api.telegram.org/bot'+BOT_TOKEN+'/sendMessage?chat_id='+CHAT_ID+
+    '&text='+encodeURIComponent(msg)).catch(()=>{});
 }
 
 /* переключение версии приложение/телеграм */
@@ -219,13 +223,19 @@ function addCal(){
   const end=new Date(dt.getTime()+3600000);
   const fmt=d=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
   const title=(ans['_t']||'Кофе')+' с Георгием '+(ans['_e']||'☕');
-  const plain=ans['Имя']+' и Георгий. Напиток: '+ans['Напиток']+', десерт: '+ans['Десерт']+', вайб: '+ans['Вайб'];
-  const g='https://calendar.google.com/calendar/render?action=TEMPLATE'+
-    '&text='+encodeURIComponent(title)+
-    '&dates='+fmt(dt)+'/'+fmt(end)+
-    '&details='+encodeURIComponent(plain);
-  const w=window.open(g,'_blank'); if(!w)location.href=g;
+  const plain=ans['Имя']+' и Георгий. Напиток '+ans['Напиток']+', вайб '+ans['Вайб'];
+  const ics='BEGIN:VCALENDAR\nVERSION:2.0\nCALSCALE:GREGORIAN\nBEGIN:VEVENT\n'+
+    'UID:'+Date.now()+'@svidanie\n'+
+    'SUMMARY:'+title+'\nDESCRIPTION:'+plain+'\n'+
+    'DTSTART:'+fmt(dt)+'\nDTEND:'+fmt(end)+'\n'+
+    'BEGIN:VALARM\nTRIGGER:-PT2H\nACTION:DISPLAY\nDESCRIPTION:Скоро встреча\nEND:VALARM\n'+
+    'END:VEVENT\nEND:VCALENDAR';
+  const data='data:text/calendar;charset=utf-8;base64,'+btoa(unescape(encodeURIComponent(ics)));
+  const a=document.createElement('a');
+  a.href=data; a.download='svidanie.ics';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
+
 
 
 
