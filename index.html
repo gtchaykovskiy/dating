@@ -189,12 +189,19 @@ function yay(){
   document.getElementById('summary').innerText=
     'Вот что мы решили:\n\nНапиток: '+ans['Напиток']+'\nДесерт: '+ans['Десерт']+
     '\nВайб: '+ans['Вайб']+'\nКогда: '+ans['День']+', '+ans['Время'];
-  // автоматически отправляем ответы тебе в телеграм
-  const msg='🎉 '+ans['Имя']+' согласилась '+e+'\n\n• Напиток: '+ans['Напиток']+
-    '\n• Десерт: '+ans['Десерт']+'\n• Вайб: '+ans['Вайб']+'\n• Когда: '+ans['День']+', '+ans['Время'];
-  fetch('https://api.telegram.org/bot'+BOT_TOKEN+'/sendMessage?chat_id='+CHAT_ID+
-    '&text='+encodeURIComponent(msg)).catch(()=>{});
+
+  // ===== АВТООТПРАВКА В GOOGLE ФОРМУ =====
+  const FORM_ID='1FAIpQLSf6wvbGfyYx6OKj_fzzi_rS52l7sbLkHYeprP0jljRJYIk-NA';   // длинная строка между /d/e/ и /viewform
+  const fd=new FormData();
+  fd.append('entry.606936721', ans['Имя']);       // <- замени номера на свои entry.xxxx
+  fd.append('entry.1394817547', ans['Напиток']);
+  fd.append('entry.1684369120', ans['Десерт']);
+  fd.append('entry.1540348100', ans['Вайб']);
+  fd.append('entry.592188012', ans['День']+', '+ans['Время']);
+  fetch('https://docs.google.com/forms/d/e/'+FORM_ID+'/formResponse',
+    {method:'POST', mode:'no-cors', body:fd}).catch(()=>{});
 }
+
 
 /* переключение версии приложение/телеграм */
 function applyMode(){
@@ -230,11 +237,20 @@ function addCal(){
     'DTSTART:'+fmt(dt)+'\nDTEND:'+fmt(end)+'\n'+
     'BEGIN:VALARM\nTRIGGER:-PT2H\nACTION:DISPLAY\nDESCRIPTION:Скоро встреча\nEND:VALARM\n'+
     'END:VEVENT\nEND:VCALENDAR';
-  const data='data:text/calendar;charset=utf-8;base64,'+btoa(unescape(encodeURIComponent(ics)));
-  const a=document.createElement('a');
-  a.href=data; a.download='svidanie.ics';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||
+              (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  if(isIOS){
+    window.location.href=url;        // iOS откроет окно "Добавить в Календарь"
+  }else{
+    const a=document.createElement('a');
+    a.href=url; a.download='svidanie.ics';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
+  setTimeout(()=>URL.revokeObjectURL(url),8000);
 }
+
 
 
 
