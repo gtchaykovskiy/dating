@@ -157,7 +157,7 @@ function pick(el){
 function updateFinal(){
   const n=ans['Имя'], p=ans['_p']||'на кофе', e=ans['_e']||'☕';
   document.getElementById('finalP').innerHTML=
-    'Ну что'+(n&&n!=='Незнакомка'?', <b>'+n+'</b>':'')+', пойдёшь со мной '+p+'? '+e;
+    'Ну что'+(n&&n!=='Незнакомка'?', <b>'+n+'</b>':'')+', пойдешь со мной '+p+'? '+e;
   document.getElementById('yes').innerText='Да '+e;
 }
 
@@ -204,9 +204,9 @@ function applyMode(){
 function sendTG(){
   const txt='Георгий, я согласна '+(ans['_e']||'☕')+'\n\nМои ответы:\n• Напиток: '+ans['Напиток']+
     '\n• Десерт: '+ans['Десерт']+'\n• Вайб: '+ans['Вайб']+'\n• Когда: '+ans['День']+', '+ans['Время'];
-  if(navigator.clipboard)navigator.clipboard.writeText(txt).catch(()=>{});
-  const u=atob('Y19nZW9yZ2l5');
-  window.open('https://'+atob('dC5tZS8=')+u,'_blank');
+  if(navigator.clipboard)navigator.clipboard.writeText(txt).catch(()=>{}); // запасной вариант
+  // открываем окно "Поделиться" с уже готовым текстом — она выбирает твой чат
+  window.open('https://t.me/share/url?url='+encodeURIComponent(' ')+'&text='+encodeURIComponent(txt),'_blank');
 }
 
 function addCal(){
@@ -216,16 +216,24 @@ function addCal(){
   const end=new Date(dt.getTime()+3600000);
   const fmt=d=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
   const title=(ans['_t']||'Кофе')+' с Георгием '+(ans['_e']||'☕');
-  const desc=ans['Имя']+' и Георгий\\nНапиток: '+ans['Напиток']+'\\nДесерт: '+ans['Десерт']+'\\nВайб: '+ans['Вайб'];
-  const ics='BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\n'+
-    'SUMMARY:'+title+'\n'+'DESCRIPTION:'+desc+'\n'+
-    'DTSTART:'+fmt(dt)+'\nDTEND:'+fmt(end)+'\n'+
-    'BEGIN:VALARM\nTRIGGER:-PT2H\nACTION:DISPLAY\nDESCRIPTION:Скоро встреча с Георгием\nEND:VALARM\n'+
-    'END:VEVENT\nEND:VCALENDAR';
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));
-  a.download='svidanie.ics'; a.click();
+  const plain=ans['Имя']+' и Георгий. Напиток: '+ans['Напиток']+', десерт: '+ans['Десерт']+', вайб: '+ans['Вайб'];
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+  if(isIOS){
+    const ics='BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\n'+
+      'SUMMARY:'+title+'\nDESCRIPTION:'+plain+'\n'+
+      'DTSTART:'+fmt(dt)+'\nDTEND:'+fmt(end)+'\n'+
+      'BEGIN:VALARM\nTRIGGER:-PT2H\nACTION:DISPLAY\nDESCRIPTION:Скоро встреча с Георгием\nEND:VALARM\n'+
+      'END:VEVENT\nEND:VCALENDAR';
+    window.location.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics);
+  }else{
+    const g='https://calendar.google.com/calendar/render?action=TEMPLATE'+
+      '&text='+encodeURIComponent(title)+
+      '&dates='+fmt(dt)+'/'+fmt(end)+
+      '&details='+encodeURIComponent(plain);
+    window.open(g,'_blank');
+  }
 }
+
 
 function confetti(){
   const c=['#c97b5a','#e0a87e','#5a4634','#f4d35e','#e07a5f'];
