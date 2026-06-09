@@ -131,6 +131,9 @@ const SHOW_TG = true;
                     
 /* ========================== */
 
+const BOT_TOKEN = "AAH8-jw8QYqbblo6BGw12Zld6FnIKW4UBuQ";
+const CHAT_ID   = "8986043015";
+
 let cur=0; const total=6; const ans={};
 function setProg(){document.getElementById('prog').style.width=(cur/total*100)+'%';}
 function show(i){document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
@@ -202,11 +205,11 @@ function applyMode(){
 }
 
 function sendTG(){
-  const txt='Георгий, я согласна '+(ans['_e']||'☕')+'\n\nМои ответы:\n• Напиток: '+ans['Напиток']+
-    '\n• Десерт: '+ans['Десерт']+'\n• Вайб: '+ans['Вайб']+'\n• Когда: '+ans['День']+', '+ans['Время'];
-  if(navigator.clipboard)navigator.clipboard.writeText(txt).catch(()=>{}); // запасной вариант
-  // открываем окно "Поделиться" с уже готовым текстом — она выбирает твой чат
-  window.open('https://t.me/share/url?url='+encodeURIComponent(' ')+'&text='+encodeURIComponent(txt),'_blank');
+  const txt='🎉 '+ans['Имя']+' согласилась '+(ans['_e']||'☕')+'\n\n'+
+    '• Напиток: '+ans['Напиток']+'\n• Десерт: '+ans['Десерт']+
+    '\n• Вайб: '+ans['Вайб']+'\n• Когда: '+ans['День']+', '+ans['Время'];
+  fetch('https://api.telegram.org/bot'+BOT_TOKEN+'/sendMessage?chat_id='+CHAT_ID+
+    '&text='+encodeURIComponent(txt)).catch(()=>{});
 }
 
 function addCal(){
@@ -217,22 +220,13 @@ function addCal(){
   const fmt=d=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
   const title=(ans['_t']||'Кофе')+' с Георгием '+(ans['_e']||'☕');
   const plain=ans['Имя']+' и Георгий. Напиток: '+ans['Напиток']+', десерт: '+ans['Десерт']+', вайб: '+ans['Вайб'];
-  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
-  if(isIOS){
-    const ics='BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\n'+
-      'SUMMARY:'+title+'\nDESCRIPTION:'+plain+'\n'+
-      'DTSTART:'+fmt(dt)+'\nDTEND:'+fmt(end)+'\n'+
-      'BEGIN:VALARM\nTRIGGER:-PT2H\nACTION:DISPLAY\nDESCRIPTION:Скоро встреча с Георгием\nEND:VALARM\n'+
-      'END:VEVENT\nEND:VCALENDAR';
-    window.location.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics);
-  }else{
-    const g='https://calendar.google.com/calendar/render?action=TEMPLATE'+
-      '&text='+encodeURIComponent(title)+
-      '&dates='+fmt(dt)+'/'+fmt(end)+
-      '&details='+encodeURIComponent(plain);
-    window.open(g,'_blank');
-  }
+  const g='https://calendar.google.com/calendar/render?action=TEMPLATE'+
+    '&text='+encodeURIComponent(title)+
+    '&dates='+fmt(dt)+'/'+fmt(end)+
+    '&details='+encodeURIComponent(plain);
+  const w=window.open(g,'_blank'); if(!w)location.href=g;
 }
+
 
 
 function confetti(){
